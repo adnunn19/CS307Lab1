@@ -47,21 +47,21 @@ app.get('/users', (req, res) => {
     if (job != undefined && name != undefined){
         // if both job and name are defined
         let person = findUserByName(name);
-        person = result.filter((user) => user['job'] === job);
-        person = {users_list: result};
-        res.send(result);
+        person = person.filter((user) => user['job'] === job);
+        person = {users_list: person};
+        res.send(person);
     }
     else if (job != undefined){
         // if only job is defined
-        let result = users['users_list'].filter((user) => user['job'] === job);
-        result = {users_list: result};
-        res.send(result);
+        let person = users['users_list'].filter((user) => user['job'] === job);
+        person = {users_list: person};
+        res.send(person);
     }
     else if (name != undefined){
         // if only name is defined
-        let result = findUserByName(name);
-        result = {users_list: result};
-        res.send(result);
+        let person = findUserByName(name);
+        person = {users_list: person};
+        res.send(person);
     }
     else{
         // if neither job and name are defined
@@ -109,17 +109,17 @@ app.delete('/users', (req, res) => {
     const job = req.query.job;
     // takes in both name and job for the deletion process
     // url will look like: /users?name='name'&job='job'
-    const result = findUserByName(name);
-    if (result.length === 0) {
+    const person = findUserByName(name);
+    if (person.length === 0) {
         res.status(404).send("User not found");
         return;
     }
-    const userToDelete = result.find((user) => user['job'] === job);
-    if (!userToDelete) {
+    const userDelete = person.find((user) => user['job'] === job);
+    if (!userDelete) {
         res.status(404).send("User not found with the specified job");
         return;
     }
-    deleteUser(userToDelete['id']);
+    deleteUser(userDelete['id']);
     res.send();
 });
 
