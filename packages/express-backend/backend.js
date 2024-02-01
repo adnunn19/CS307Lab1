@@ -1,9 +1,13 @@
 import express from "express";
+import cors from "cors";
 
 const app = express();
 const port = 8000;
 
+app.use(cors())
 app.use(express.json());
+
+const genRandomID = () => Math.floor(Math.random()*100000)
 
 const users = {
     users_list: [
@@ -84,6 +88,8 @@ app.get("/users/:id", (req, res) => {
 });
 
 const addUser = (user) => {
+    let newID = genRandomID().toString();
+    user.id = newID
     users["users_list"].push(user);
     return user;
 };
@@ -91,7 +97,12 @@ const addUser = (user) => {
 app.post("/users", (req, res) => {
     const userToAdd = req.body;
     addUser(userToAdd);
-    res.send();
+    let newPerson = findUserByName(userToAdd.name);
+    if (newPerson === undefined){
+      // found error code 417, "expectation failed"
+        res.status(417).send("Person was unable to be added")
+    }
+    res.status(201).send(newPerson);
 });
 
 const deleteUser = (id) => {
@@ -122,6 +133,7 @@ app.delete('/users', (req, res) => {
     deleteUser(userDelete['id']);
     res.send();
 });
+
 
 app.get("/", (req, res) => {
     res.send("Hello World!");
