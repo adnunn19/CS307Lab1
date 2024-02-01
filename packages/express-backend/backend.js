@@ -102,7 +102,7 @@ app.post("/users", (req, res) => {
       // found error code 417, "expectation failed"
         res.status(417).send("Person was unable to be added")
     }
-    res.status(201).send(newPerson);
+    res.status(204).send(newPerson);
 });
 
 const deleteUser = (id) => {
