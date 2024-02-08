@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import mongoose from "mongoose";
 
 const app = express();
 const port = 8000;
@@ -7,75 +8,87 @@ const port = 8000;
 app.use(cors())
 app.use(express.json());
 
-const genRandomID = () => Math.floor(Math.random()*100000)
+mongoose.set("debug", true);
 
-const users = {
-    users_list: [
-      {
-        id: "xyz789",
-        name: "Charlie",
-        job: "Janitor"
-      },
-      {
-        id: "abc123",
-        name: "Mac",
-        job: "Bouncer"
-      },
-      {
-        id: "ppp222",
-        name: "Mac",
-        job: "Professor"
-      },
-      {
-        id: "yat999",
-        name: "Dee",
-        job: "Aspring actress"
-      },
-      {
-        id: "zap555",
-        name: "Dennis",
-        job: "Store Clerk"
-      }
-    ]
-  };
+mongoose
+  .connect("mongodb://localhost:27017/users", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .catch((error) => console.log(error));
 
-const findUserByName = (name) => {
-    return users["users_list"].filter(
-        (user) => user["name"] === name
-    );
-};
+const UserSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    job: {
+      type: String,
+      required: true,
+      trim: true,
+      validate(value) {
+        if (value.length < 2)
+          throw new Error("Invalid job, must be at least 2 characters.");
+      },
+    },
+  },
+  { collection: "users_list" }
+);
 
-app.get('/users', (req, res) => {
-    const name = req.query.name;
-    const job = req.query.job;
+const User = mongoose.model("User", UserSchema);
+
+function getUsers(name, job) {
+  let promise;
+  if (name === undefined && job === undefined) {
+    promise = userModel.find();
+  } else if (name && !job) {
+    promise = findUserByName(name);
+  } else if (job && !name) {
+    promise = findUserByJob(job);
+  }
+  return promise;
+}
+
+function findUserById(id) {
+  return userModel.findById(id);
+}
+
+function addUser(user) {
+  const userToAdd = new userModel(user);
+  const promise = userToAdd.save();
+  return promise;
+}
+
+function findUserByName(name) {
+  return userModel.find({ name: name });
+}
+
+function findUserByJob(job) {
+  return userModel.find({ job: job });
+}
+
+app.get('/users', async (req, res) => {
+    const { name, job } = req.query;
     if (job != undefined && name != undefined){
         // if both job and name are defined
-        let person = findUserByName(name);
-        person = person.filter((user) => user['job'] === job);
-        person = {users_list: person};
-        res.send(person);
+        users = await userModel.find({ name: name, job: job});
     }
     else if (job != undefined){
         // if only job is defined
-        let person = users['users_list'].filter((user) => user['job'] === job);
-        person = {users_list: person};
-        res.send(person);
+        users = await userModel.find({ job: job });
     }
     else if (name != undefined){
         // if only name is defined
-        let person = findUserByName(name);
-        person = {users_list: person};
-        res.send(person);
+        users = await userModel.find({ name: name });
     }
     else{
         // if neither job and name are defined
-        res.send(users);
+        users = await userModel.find();
     }
+    res.send({ users_list: users });
 });
-
- 
-const findUserById = (id) =>
-    users["users_list"].find((user) => user["id"] === id);
 
 app.get("/users/:id", (req, res) => {
     const id = req.params['id']; //or req.params.id
@@ -86,13 +99,6 @@ app.get("/users/:id", (req, res) => {
         res.send(result);
     }
 });
-
-const addUser = (user) => {
-    let newID = genRandomID().toString();
-    user.id = newID
-    users["users_list"].push(user);
-    return user;
-};
   
 app.post("/users", (req, res) => {
     const userToAdd = req.body;
@@ -104,10 +110,6 @@ app.post("/users", (req, res) => {
     }
     res.status(204).send(newPerson);
 });
-
-const deleteUser = (id) => {
-    users['users_list'] = users['users_list'].filter((user) => user['id'] !== id);
-}
 
 app.delete('/users/:id', (req, res) => {
     const id = req.params.id;
@@ -144,3 +146,5 @@ app.listen(port, () => {
     `Example app listening at http://localhost:${port}`
   );
 });
+
+export default User;
