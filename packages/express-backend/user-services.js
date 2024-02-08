@@ -45,7 +45,7 @@ function findUserByUserJob(name, job){
 }
 
 function deleteUser(id) {
-  return userModel.findOneAndDelete({_id: id });
+  return userModel.findByIdAndDelete(id);
 }
 
 function deleteUserMany(users){

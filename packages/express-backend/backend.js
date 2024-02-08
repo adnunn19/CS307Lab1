@@ -46,7 +46,7 @@ app.post("/users", async (req, res) => {
 app.delete('/users/:id', async (req, res) => {
     const id = req.params['id'];
     try{
-      await deleteUser(id);
+      await userServices.deleteUser(id);
       res.send();
     } catch (error){
       res.status(500).send(error.message);
