@@ -69,19 +69,25 @@ function findUserByJob(job) {
   return userModel.find({ job: job });
 }
 
+const deleteUser = async (id) => {
+  await userModel.deleteOne({ id: id });
+}
+  
+
 app.get('/users', async (req, res) => {
     const { name, job } = req.query;
     if (job != undefined && name != undefined){
         // if both job and name are defined
-        users = await userModel.find({ name: name, job: job});
+        users = await findUserByName(name);
+        users = users.filter((user) => user.job === job);
     }
     else if (job != undefined){
         // if only job is defined
-        users = await userModel.find({ job: job });
+        users = await findUserByJob(job);
     }
     else if (name != undefined){
         // if only name is defined
-        users = await userModel.find({ name: name });
+        users = await findUserByName(name);
     }
     else{
         // if neither job and name are defined
@@ -90,20 +96,19 @@ app.get('/users', async (req, res) => {
     res.send({ users_list: users });
 });
 
-app.get("/users/:id", (req, res) => {
+app.get("/users/:id", async (req, res) => {
     const id = req.params['id']; //or req.params.id
-    let result = findUserById(id);
+    const user = await findUserById(id);
     if (result === undefined) {
-        res.status(404).send("Resource not found.");
+        res.status(404).send("User not found.");
     } else {
-        res.send(result);
+        res.send(user);
     }
 });
   
-app.post("/users", (req, res) => {
+app.post("/users", async (req, res) => {
     const userToAdd = req.body;
-    addUser(userToAdd);
-    let newPerson = findUserByName(userToAdd.name);
+    let newPerson = await addUser(addToUser);
     if (newPerson === undefined){
       // found error code 417, "expectation failed"
         res.status(417).send("Person was unable to be added")
@@ -111,15 +116,14 @@ app.post("/users", (req, res) => {
     res.status(204).send(newPerson);
 });
 
-app.delete('/users/:id', (req, res) => {
+app.delete('/users/:id', async (req, res) => {
     const id = req.params.id;
-    deleteUser(id);
+    await deleteUser(id);
     res.send();
 });
 
-app.delete('/users', (req, res) => {
-    const name = req.query.name;
-    const job = req.query.job;
+app.delete('/users', async (req, res) => {
+    const { name, job } = req.query;
     // takes in both name and job for the deletion process
     // url will look like: /users?name='name'&job='job'
     const person = findUserByName(name);
@@ -127,7 +131,7 @@ app.delete('/users', (req, res) => {
         res.status(404).send("User not found");
         return;
     }
-    const userDelete = person.find((user) => user['job'] === job);
+    // await userModel.deleteMany({ name: name, job: job });
     if (!userDelete) {
         res.status(404).send("User not found with the specified job");
         return;
