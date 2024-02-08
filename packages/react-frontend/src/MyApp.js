@@ -7,10 +7,6 @@ import Form from "./Form";
     function removeOneCharacter(index, job, characterName) {
       const promise = fetch(`http://localhost:8000/users/?name=${characterName}&job=${job}`,{
         method: 'DELETE'}).then(() => {fetchUsers().then((res) => res.json()).then((json) => setCharacters(json["users_list"]))});
-      const updated = characters.filter((character, i) => {
-          return i !== index
-      });
-      setCharacters(updated);
       return promise;
       }
 
