@@ -44,12 +44,13 @@ app.post("/users", async (req, res) => {
 });
 
 app.delete('/users/:id', async (req, res) => {
-    const userToRemove = req.body;
-    const deletedUser = await userServices.deleteUser(_id);
-    if(deletedUser === undefined){
-      res.status(417).send("Person was unable to be removed");
+    const id = req.params['id'];
+    try{
+      await deleteUser(id);
+      res.send();
+    } catch (error){
+      res.status(500).send(error.message);
     }
-    res.send();
 });
 
 app.delete('/users', async (req, res) => {
@@ -57,19 +58,15 @@ app.delete('/users', async (req, res) => {
     const job = req.query.job;
     // takes in both name and job for the deletion process
     // url will look like: /users?name='name'&job='job'
-    const person = await userServices.findUserByName(name);
-    if (person.length === 0) {
-        res.status(404).send("User not found");
-        return;
+    try{
+      const users = await userServices.findUserByName(name);
+      const usersToDelete = users.filter(user => user.job === job);
+      await userServices.deleteUserMany(usersToDelete);
+      res.send()
     }
-    const userDelete = await userServices.deleteUserJob(name, job)
-    // const userDelete = person.find((user) => user['job'] === job);
-    if (!userDelete) {
-        res.status(404).send("User not found with the specified job");
-        return;
+    catch (error){
+      res.status(500).send(error.message);
     }
-    deleteUser(userDelete['id']);
-    res.send();
 });
 
 

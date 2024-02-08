@@ -40,13 +40,19 @@ function findUserByJob(job) {
   return userModel.find({ job: job });
 }
 
-function deleteUser(id) {
-  return userModel.deleteOne(id);
+function findUserByUserJob(name, job){
+  return userModel.find({ name: name, job: job });
 }
 
-function deleteUserJob(name, job){
-  return userModel.deleteMany({ name: name, job: job });
+function deleteUser(id) {
+  return userModel.findOneAndDelete({_id: id });
 }
+
+function deleteUserMany(users){
+  const idsToDelete = users.map(user=>user._id);
+  return userModel.findOneAndDelete(idsToDelete)
+}
+
 
 export default {
   addUser,
@@ -54,5 +60,7 @@ export default {
   findUserById,
   findUserByName,
   findUserByJob,
+  findUserByUserJob,
   deleteUser,
+  deleteUserMany,
 };
